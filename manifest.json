@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "AUS Code Dictionary VNPZ v5.5",
-  "version": "5.5",
+  "name": "AUS Code Dictionary VNPZ v5.6",
+  "version": "5.6",
   "author": "Удовеня Александр <alex31kv@yandex.ru>",
-  "description": "Надстройка для AUS. Словарь кодов VNPZ.",
+  "description": "Надстройка для работы с кодами Aspen Unified Scheduling (AUS).",
 
   "permissions": ["storage", "tabs"],
   "background": {
