@@ -12,16 +12,33 @@ function logWithTime(message) {
 }
 
 function loadKeywords() {
-  fetch(chrome.runtime.getURL('keywords.json'))
-    .then(response => response.json())
-    .then(data => {
-      chrome.storage.local.set({ keywords: data }, () => {
-        logWithTime(`Ключевые слова загружены и сохранены: ${Object.keys(data).length} записей`);
+  chrome.storage.sync.get(['selectedDictionary'], (result) => {
+    const dictionaryFile = result.selectedDictionary || 'keywords_vnpz.json'; // Default is now keywords_vnpz.json
+    
+    fetch(chrome.runtime.getURL(dictionaryFile))
+      .then(response => response.json())
+      .then(data => {
+        chrome.storage.local.set({ keywords: data }, () => {
+          logWithTime(`Ключевые слова загружены из ${dictionaryFile}: ${Object.keys(data).length} записей`);
+        });
+      })
+      .catch(error => {
+        logWithTime(`Ошибка загрузки ключевых слов из ${dictionaryFile}: ${error}`);
+        // Fallback to default if selected dictionary fails
+        if (dictionaryFile !== 'keywords_vnpz.json') {
+          fetch(chrome.runtime.getURL('keywords_vnpz.json'))
+            .then(response => response.json())
+            .then(data => {
+              chrome.storage.local.set({ keywords: data }, () => {
+                logWithTime(`Загружен резервный словарь: ${Object.keys(data).length} записей`);
+              });
+            })
+            .catch(fallbackError => {
+              logWithTime(`Ошибка загрузки резервного словаря: ${fallbackError}`);
+            });
+        }
       });
-    })
-    .catch(error => {
-      logWithTime(`Ошибка загрузки ключевых слов: ${error}`);
-    });
+  });
 }
 
 chrome.runtime.onInstalled.addListener(() => {
