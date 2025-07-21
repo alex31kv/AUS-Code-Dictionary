@@ -1,4 +1,4 @@
-AUS Code Dictionary - расширение для ПО Aspen Unified Scheduling браузера Microsoft EDGE
+**AUS Code Dictionary - расширение для ПО Aspen Unified Scheduling браузера Microsoft EDGE**
 
 <img width="770" height="555" alt="image" src="https://github.com/user-attachments/assets/2ba99499-8eaf-4283-847f-0f6c92c23897" />
 
