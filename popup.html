@@ -175,10 +175,13 @@
       text-align: right;
     }
 	.dictionary-selector {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 8px;
     }
     .dictionary-selector select {
-      width: 100%;
+      width: 80%;
     }
 	
 	.divider {
@@ -200,12 +203,14 @@
 	<small>
 		<span>Разработал: </span>
 		<a href="mailto:alex31kv@yandex.ru" target="_blank" style="float: right;">Udovenya Alexander</a><br>
+		<span>Версия: </span>
+		<span id="extension-version" style="float: right;"></span><br>
+		<span>Проверить обновления: </span>
+		<a href="https://github.com/alex31kv/AUS-Code-Dictionary/releases/" target="_blank" style="float: right;">GitHub.com/alex31kv</a>
 	</small>
 	<div class="divider"></div>
 	<small>
-		<span>Надстройка для работы с кодами AUS.</span><br>
-		<span>Проверить обновления: </span>
-		<a href="https://github.com/alex31kv/AUS-Code-Dictionary/releases/" target="_blank" style="float: right;">GitHub.com/alex31kv</a>
+		<span>Расширение для интеграции с программным обеспечением Aspen Unified Scheduling, для формирования всплывающих подсказок с описанием из словаря пользователя.</span><br>
 	</small>
   </div>
   <div class="divider"></div>

@@ -14,7 +14,7 @@ function logWithTime(message) {
 document.addEventListener('DOMContentLoaded', () => {
   try {
     const elements = {
-	  dictionarySelect: document.getElementById('dictionarySelect'),
+      dictionarySelect: document.getElementById('dictionarySelect'),
       keywordCount: document.getElementById('keyword-count'),
       saveSettings: document.getElementById('saveSettings'),
       closePopup: document.getElementById('closePopup'),
@@ -30,14 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-	loadAvailableDictionaries();
+    loadAvailableDictionaries();
     loadData();
     
     elements.saveSettings.addEventListener('click', saveSettings);
     elements.closePopup.addEventListener('click', closePopup);
     elements.extensionEnabled.addEventListener('change', toggleExtension);
     elements.clearCache.addEventListener('click', clearCache);
-	elements.dictionarySelect.addEventListener('change', changeDictionary);
+    elements.dictionarySelect.addEventListener('change', changeDictionary);
 
     logWithTime('Popup инициализирован');
   } catch (error) {
@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadData() {
   try {
+    const manifest = chrome.runtime.getManifest();
+    document.getElementById('extension-version').textContent = manifest.version;
+	  
     chrome.storage.local.get(['keywords'], (result) => {
       const keywordCountElement = document.getElementById('keyword-count');
       if (keywordCountElement) {
@@ -72,12 +75,10 @@ function loadData() {
         document.getElementById('extensionEnabled').checked = isEnabled;
         updateExtensionStatusLabel(isEnabled);
 
-        // Установка цветов
         document.getElementById('popupTextColor').value = result.popupTextColor || '#000000';
         document.getElementById('popupBgColor').value = result.popupBgColor || '#ffffff';
         document.getElementById('highlightTextColor').value = result.highlightTextColor || '#0066cc';
         
-        // Обработка прозрачного фона
         const isTransparent = result.highlightBgColor === 'transparent';
         document.getElementById('transparentBgCheckbox').checked = isTransparent;
         if (!isTransparent && result.highlightBgColor) {
@@ -111,22 +112,17 @@ function loadAvailableDictionaries() {
         select.appendChild(option);
       });
       
-      // загрузка последнего выбранного словаря с приоритетом на keywords_vnpz.json
       chrome.storage.sync.get(['selectedDictionary'], (result) => {
-        const defaultDict = dictionaries.includes('keywords_vnpz.json') 
-          ? 'keywords_vnpz.json' 
-          : dictionaries[0];
+        const defaultDict = dictionaries.includes('keywords_VNPZ.json') 
+          ? 'keywords_VNPZ.json' 
+          : (dictionaries.length > 0 ? dictionaries[0] : null);
         
         if (result.selectedDictionary && dictionaries.includes(result.selectedDictionary)) {
           select.value = result.selectedDictionary;
-        } else {
+        } else if (defaultDict) {
           select.value = defaultDict;
-          // Сохраняем выбранный по умолчанию словарь
           chrome.storage.sync.set({ selectedDictionary: defaultDict });
         }
-        
-        // После выбора словаря обновляем счетчик
-        loadData();
       });
     });
   });
@@ -135,9 +131,18 @@ function loadAvailableDictionaries() {
 function changeDictionary() {
   const selectedDictionary = document.getElementById('dictionarySelect').value;
   chrome.storage.sync.set({ selectedDictionary }, () => {
-    showStatus(`Выбран словарь: ${selectedDictionary}`);
-    loadData(); // Добавлена эта строка для обновления счетчика
-	clearCache();
+    showStatus(`Загрузка словаря: ${selectedDictionary}`);
+    document.getElementById('keyword-count').textContent = '0';
+    
+    chrome.runtime.sendMessage({action: "reloadKeywords"}, (response) => {
+      if (response?.success) {
+        saveSettings();
+		loadData();
+        showStatus(`Словарь загружен: ${selectedDictionary}`);
+      } else {
+        showStatus('Ошибка загрузки словаря');
+      }
+    });
   });
 }
 
@@ -190,7 +195,6 @@ function saveSettings() {
         showStatus('Настройки сохранены!');
         logWithTime('Настройки сохранены: ' + JSON.stringify(settings));
         
-        // Обновляем активную вкладку
         chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
           if (tabs[0]?.id) {
             chrome.tabs.sendMessage(tabs[0].id, {
@@ -211,7 +215,6 @@ function saveSettings() {
 
 function clearCache() {
   try {
-    // перезагрузка словаря keywords.json
     chrome.runtime.sendMessage({action: "reloadKeywords"}, (response) => {
       if (chrome.runtime.lastError) {
         logWithTime(`Ошибка при перезагрузке keywords_.json: ${chrome.runtime.lastError.message}`);
@@ -219,7 +222,6 @@ function clearCache() {
       } else {
         showStatus('Словарь перезагружен!');
         logWithTime('Keywords.json успешно перезагружен');
-        // Обновляем счетчик ключевых слов
         loadData();
       }
     });

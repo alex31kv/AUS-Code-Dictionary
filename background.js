@@ -12,32 +12,45 @@ function logWithTime(message) {
 }
 
 function loadKeywords() {
-  chrome.storage.sync.get(['selectedDictionary'], (result) => {
-    const dictionaryFile = result.selectedDictionary || 'keywords_vnpz.json'; // Default is now keywords_vnpz.json
-    
-    fetch(chrome.runtime.getURL(dictionaryFile))
-      .then(response => response.json())
-      .then(data => {
-        chrome.storage.local.set({ keywords: data }, () => {
-          logWithTime(`Ключевые слова загружены из ${dictionaryFile}: ${Object.keys(data).length} записей`);
-        });
-      })
-      .catch(error => {
-        logWithTime(`Ошибка загрузки ключевых слов из ${dictionaryFile}: ${error}`);
-        // Fallback to default if selected dictionary fails
-        if (dictionaryFile !== 'keywords_vnpz.json') {
-          fetch(chrome.runtime.getURL('keywords_vnpz.json'))
-            .then(response => response.json())
-            .then(data => {
-              chrome.storage.local.set({ keywords: data }, () => {
-                logWithTime(`Загружен резервный словарь: ${Object.keys(data).length} записей`);
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get(['selectedDictionary'], (result) => {
+      const dictionaryFile = result.selectedDictionary || 'keywords_vnpz.json';
+      
+      fetch(chrome.runtime.getURL(dictionaryFile))
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          return response.json();
+        })
+        .then(data => {
+          chrome.storage.local.set({ keywords: data }, () => {
+            logWithTime(`Ключевые слова загружены из ${dictionaryFile}: ${Object.keys(data).length} записей`);
+            resolve(true);
+          });
+        })
+        .catch(error => {
+          logWithTime(`Ошибка загрузки ключевых слов из ${dictionaryFile}: ${error}`);
+          
+          if (dictionaryFile !== 'keywords_vnpz.json') {
+            fetch(chrome.runtime.getURL('keywords_vnpz.json'))
+              .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+              })
+              .then(data => {
+                chrome.storage.local.set({ keywords: data }, () => {
+                  logWithTime(`Загружен резервный словарь: ${Object.keys(data).length} записей`);
+                  resolve(true);
+                });
+              })
+              .catch(fallbackError => {
+                logWithTime(`Ошибка загрузки резервного словаря: ${fallbackError}`);
+                reject(fallbackError);
               });
-            })
-            .catch(fallbackError => {
-              logWithTime(`Ошибка загрузки резервного словаря: ${fallbackError}`);
-            });
-        }
-      });
+          } else {
+            reject(error);
+          }
+        });
+    });
   });
 }
 
@@ -45,13 +58,17 @@ chrome.runtime.onInstalled.addListener(() => {
   logWithTime('Расширение установлено');
   chrome.storage.sync.set({ extensionEnabled: true });
   logWithTime('Установлено состояние по умолчанию (включено)');
-  loadKeywords();
+  loadKeywords().catch(err => {
+    logWithTime(`Ошибка при начальной загрузке словаря: ${err}`);
+  });
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "reloadKeywords") {
-    loadKeywords();
-    sendResponse({success: true});
+    loadKeywords()
+      .then(() => sendResponse({success: true}))
+      .catch(err => sendResponse({success: false, error: err.message}));
+    return true; // Необходимо для асинхронного ответа
   }
 });
 
@@ -69,6 +86,13 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
           });
         }
       });
+    });
+  }
+  
+  if (namespace === 'sync' && changes.selectedDictionary) {
+    logWithTime(`Обнаружена смена словаря на ${changes.selectedDictionary.newValue}`);
+    loadKeywords().catch(err => {
+      logWithTime(`Ошибка при загрузке нового словаря: ${err}`);
     });
   }
 });
