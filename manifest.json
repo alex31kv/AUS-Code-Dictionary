@@ -1,11 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "AUS Code Dictionary v5.8",
-  "version": "5.8",
+  "name": "AUS Code Dictionary",
+  "version": "5.8.1",
   "author": "Удовеня Александр <alex31kv@yandex.ru>",
   "description": "Надстройка для работы с кодами Aspen Unified Scheduling (AUS).",
 
-  "permissions": ["storage", "tabs"],
+  "permissions": [
+		"storage",
+		"tabs"
+	],
   "background": {
     "service_worker": "background.js"
   },
@@ -34,6 +37,7 @@
   },
   "host_permissions": [
     "*://*/*AspenTech/AspenUnified/*",
-    "*://*/*aspenTech/aspenUnified/*"
+    "*://*/*aspenTech/aspenUnified/*",
+	"https://api.github.com/"
   ]
 }

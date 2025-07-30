@@ -159,6 +159,14 @@
       margin-left: auto;
       white-space: nowrap;
     }
+	#checkUpdates {
+      background-color: #2196F3;
+      color: white;
+      padding: 3px 8px;
+      font-size: 11px;
+      margin-left: auto;
+      white-space: nowrap;
+    }
     /*стиль для интервала проверки */
     .interval-group {
       display: flex;
@@ -194,7 +202,7 @@
 <body>
   <div class="header">
     <div class="header-row">
-      <h1>AUS Code Dictionary</h1>
+      <h1><a href="https://github.com/alex31kv/AUS-Code-Dictionary/" target="_blank">AUS Code Dictionary</a></h1>
       <label class="switch">
         <input type="checkbox" id="extensionEnabled" checked>
         <span class="slider"></span>
@@ -206,7 +214,7 @@
 		<span>Версия: </span>
 		<span id="extension-version" style="float: right;"></span><br>
 		<span>Проверить обновления: </span>
-		<a href="https://github.com/alex31kv/AUS-Code-Dictionary/releases/" target="_blank" style="float: right;">GitHub.com/alex31kv</a>
+		<button id="checkUpdates" style="float: right; padding: 2px 6px; font-size: 11px; margin-right: 0px;">Проверить</button>
 	</small>
 	<div class="divider"></div>
 	<small>

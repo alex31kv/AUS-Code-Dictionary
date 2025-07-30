@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closePopup: document.getElementById('closePopup'),
       extensionEnabled: document.getElementById('extensionEnabled'),
       clearCache: document.getElementById('clearCache'),
+	  checkUpdates: document.getElementById('checkUpdates'),
       status: document.getElementById('status')
     };
 
@@ -38,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.extensionEnabled.addEventListener('change', toggleExtension);
     elements.clearCache.addEventListener('click', clearCache);
     elements.dictionarySelect.addEventListener('change', changeDictionary);
+	elements.checkUpdates.addEventListener('click', checkForUpdates);
 
     logWithTime('Popup инициализирован');
   } catch (error) {
@@ -265,4 +267,52 @@ async function updateActiveTab() {
   } catch (error) {
     logWithTime(`Ошибка обновления вкладки: ${error}`);
   }
+}
+
+function checkForUpdates() {
+  try {
+    showStatus('Проверка обновлений...');
+    const currentVersion = document.getElementById('extension-version').textContent;
+    
+    fetch('https://api.github.com/repos/alex31kv/AUS-Code-Dictionary/releases/latest')
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        const latestVersion = data.tag_name.replace(/^v/, ''); // Удаляем 'v' из версии если есть
+        logWithTime(`Текущая версия: ${currentVersion}, последняя версия: ${latestVersion}`);
+        
+        if (isNewerVersion(latestVersion, currentVersion)) {
+          showStatus(`Доступна новая версия: ${latestVersion}`);
+          if (confirm(`Доступна новая версия ${latestVersion} (у вас ${currentVersion}). Хотите перейти на страницу загрузки?`)) {
+            chrome.tabs.create({ url: data.html_url });
+          }
+        } else {
+          showStatus('Вы пользуетесь последней версией');
+        }
+      })
+      .catch(error => {
+        logWithTime(`Ошибка при проверке обновлений: ${error}`);
+        showStatus('Ошибка при проверке обновлений');
+      });
+  } catch (error) {
+    logWithTime(`Ошибка в checkForUpdates: ${error}`);
+    showStatus('Ошибка при проверке обновлений');
+  }
+}
+
+function isNewerVersion(latest, current) {
+  const latestParts = latest.split('.').map(Number);
+  const currentParts = current.split('.').map(Number);
+  
+  for (let i = 0; i < Math.max(latestParts.length, currentParts.length); i++) {
+    const latestPart = latestParts[i] || 0;
+    const currentPart = currentParts[i] || 0;
+    
+    if (latestPart > currentPart) return true;
+    if (latestPart < currentPart) return false;
+  }
+  
+  return false;
 }
