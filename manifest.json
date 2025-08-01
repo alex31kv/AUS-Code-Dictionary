@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AUS Code Dictionary",
-  "version": "5.8.1",
+  "version": "5.8.2",
   "author": "Удовеня Александр <alex31kv@yandex.ru>",
   "description": "Надстройка для работы с кодами Aspen Unified Scheduling (AUS).",
 
